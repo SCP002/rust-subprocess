@@ -115,9 +115,12 @@ pub struct PopenConfig {
     pub stderr: Redirection,
     /// Whether the `Popen` instance is initially detached.
     pub detached: bool,
-    /// Process Creation Flags
+    /// Process Creation Flags.
     #[cfg(windows)]
     pub creation_flags: u32,
+    /// Process Startup Info Flags.
+    #[cfg(windows)]
+    pub sinfo_flags: u32,
 
     /// Executable to run.
     ///
@@ -189,6 +192,8 @@ impl PopenConfig {
             detached: self.detached,
             #[cfg(windows)]
             creation_flags: self.creation_flags,
+            #[cfg(windows)]
+            sinfo_flags: self.sinfo_flags,
             executable: self.executable.as_ref().cloned(),
             env: self.env.clone(),
             cwd: self.cwd.clone(),
@@ -220,6 +225,8 @@ impl Default for PopenConfig {
             detached: false,
             #[cfg(windows)]
             creation_flags: 0,
+            #[cfg(windows)]
+            sinfo_flags: crate::win32::STARTF_USESTDHANDLES,
             executable: None,
             env: None,
             cwd: None,
@@ -1021,7 +1028,7 @@ mod os {
                 raw(&child_stdin),
                 raw(&child_stdout),
                 raw(&child_stderr),
-                win32::STARTF_USESTDHANDLES,
+                config.sinfo_flags,
             )?;
             self.child_state = Running {
                 pid: pid as u32,
