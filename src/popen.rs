@@ -9,7 +9,7 @@ use std::rc::Rc;
 use std::result;
 use std::time::Duration;
 
-use crate::communicate;
+use crate::{communicate, win32};
 use crate::os_common::{ExitStatus, StandardStream};
 
 use self::ChildState::*;
@@ -120,7 +120,7 @@ pub struct PopenConfig {
     pub creation_flags: u32,
     /// Process Startup Info Flags.
     #[cfg(windows)]
-    pub sinfo_flags: u32,
+    pub startup_info_flags: u32,
 
     /// Executable to run.
     ///
@@ -193,7 +193,7 @@ impl PopenConfig {
             #[cfg(windows)]
             creation_flags: self.creation_flags,
             #[cfg(windows)]
-            sinfo_flags: self.sinfo_flags,
+            startup_info_flags: self.startup_info_flags,
             executable: self.executable.as_ref().cloned(),
             env: self.env.clone(),
             cwd: self.cwd.clone(),
@@ -226,7 +226,7 @@ impl Default for PopenConfig {
             #[cfg(windows)]
             creation_flags: 0,
             #[cfg(windows)]
-            sinfo_flags: crate::win32::STARTF_USESTDHANDLES,
+            startup_info_flags: win32::STARTF_USESTDHANDLES,
             executable: None,
             env: None,
             cwd: None,
@@ -1028,7 +1028,7 @@ mod os {
                 raw(&child_stdin),
                 raw(&child_stdout),
                 raw(&child_stderr),
-                config.sinfo_flags,
+                config.startup_info_flags,
             )?;
             self.child_state = Running {
                 pid: pid as u32,

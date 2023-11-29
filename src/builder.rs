@@ -194,6 +194,18 @@ mod exec {
             self
         }
 
+        /// Specifies creation flags of the child process.
+        pub fn creation_flags(mut self, flags: u32) -> Exec {
+            self.config.creation_flags = flags;
+            self
+        }
+
+        /// Specifies startup info flags of the child process.
+        pub fn startup_info_flags(mut self, flags: u32) -> Exec {
+            self.config.startup_info_flags = flags;
+            self
+        }
+
         fn ensure_env(&mut self) {
             if self.config.env.is_none() {
                 self.config.env = Some(PopenConfig::current_env());
