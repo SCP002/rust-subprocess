@@ -9,7 +9,7 @@ use std::rc::Rc;
 use std::result;
 use std::time::Duration;
 
-use crate::{communicate, win32};
+use crate::communicate;
 use crate::os_common::{ExitStatus, StandardStream};
 
 use self::ChildState::*;
@@ -115,12 +115,6 @@ pub struct PopenConfig {
     pub stderr: Redirection,
     /// Whether the `Popen` instance is initially detached.
     pub detached: bool,
-    /// Process Creation Flags.
-    #[cfg(windows)]
-    pub creation_flags: u32,
-    /// Process Startup Info Flags.
-    #[cfg(windows)]
-    pub startup_info_flags: u32,
 
     /// Executable to run.
     ///
@@ -144,6 +138,14 @@ pub struct PopenConfig {
     ///
     /// None means inherit the working directory from the parent.
     pub cwd: Option<OsString>,
+
+    /// Process Creation Flags.
+    #[cfg(windows)]
+    pub creation_flags: u32,
+
+    /// Process Startup Info Flags.
+    #[cfg(windows)]
+    pub startup_info_flags: u32,
 
     /// Set user ID for the subprocess.
     ///
@@ -190,13 +192,13 @@ impl PopenConfig {
             stdout: self.stdout.try_clone()?,
             stderr: self.stderr.try_clone()?,
             detached: self.detached,
+            executable: self.executable.as_ref().cloned(),
+            env: self.env.clone(),
+            cwd: self.cwd.clone(),
             #[cfg(windows)]
             creation_flags: self.creation_flags,
             #[cfg(windows)]
             startup_info_flags: self.startup_info_flags,
-            executable: self.executable.as_ref().cloned(),
-            env: self.env.clone(),
-            cwd: self.cwd.clone(),
             #[cfg(unix)]
             setuid: self.setuid,
             #[cfg(unix)]
@@ -223,13 +225,13 @@ impl Default for PopenConfig {
             stdout: Redirection::None,
             stderr: Redirection::None,
             detached: false,
-            #[cfg(windows)]
-            creation_flags: 0,
-            #[cfg(windows)]
-            startup_info_flags: win32::STARTF_USESTDHANDLES,
             executable: None,
             env: None,
             cwd: None,
+            #[cfg(windows)]
+            creation_flags: 0,
+            #[cfg(windows)]
+            startup_info_flags: crate::win32::STARTF_USESTDHANDLES,
             #[cfg(unix)]
             setuid: None,
             #[cfg(unix)]
